@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Snake — System Check</title>
+  <style>
+    body {
+      font-family: "Consolas", "Courier New", monospace;
+      background: #0a0f1e; color: #e8ecf8;
+      max-width: 720px; margin: 0 auto; padding: 32px 20px;
+      line-height: 1.6;
+    }
+    h1 { font-size: 20px; color: #ffb347; }
+    p.sub { color: #8c96b4; font-size: 14px; margin-bottom: 24px; }
+    .step {
+      border: 1px solid #27314f; border-radius: 8px;
+      padding: 12px 16px; margin-bottom: 12px; background: #111831;
+    }
+    .step h2 { font-size: 14px; margin: 0 0 6px; }
+    .status { font-size: 14px; }
+    .wait { color: #8c96b4; }
+    .pass { color: #5eead4; }
+    .fail { color: #ff6b6b; }
+    .detail { font-size: 12px; color: #8c96b4; margin-top: 6px; word-break: break-all; }
+    .fix { font-size: 13px; color: #ffb347; margin-top: 8px; display: none; }
+    .step.failed .fix { display: block; }
+    #verdict {
+      margin-top: 20px; padding: 16px; border-radius: 8px;
+      border: 1px solid #27314f; font-size: 15px; display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔧 AI Snake — System Check</h1>
+  <p class="sub">Tests each requirement one at a time. Run this from the same place you run the game (localhost or your deployed link).</p>
+
+  <div class="step" id="s1">
+    <h2>1. Secure context (https or localhost)</h2>
+    <div class="status wait">checking…</div>
+    <div class="fix">Fix: open the page via http://localhost:8000 or your Vercel https link — not by double-clicking the file.</div>
+  </div>
+
+  <div class="step" id="s2">
+    <h2>2. Reach cdn.jsdelivr.net (MediaPipe code)</h2>
+    <div class="status wait">checking…</div>
+    <div class="fix">Fix: your network/firewall is blocking cdn.jsdelivr.net. Try a different network (e.g. phone hotspot) or ask IT to allow it.</div>
+  </div>
+
+  <div class="step" id="s3">
+    <h2>3. Download AI model from storage.googleapis.com</h2>
+    <div class="status wait">checking…</div>
+    <div class="fix">Fix: your network is blocking storage.googleapis.com. Try a phone hotspot, or download the model file manually and serve it locally (ask for the "local model" variant of the game).</div>
+  </div>
+
+  <div class="step" id="s4">
+    <h2>4. Start the AI (GPU, then CPU fallback)</h2>
+    <div class="status wait">waiting for step 2–3…</div>
+    <div class="fix">Fix: if GPU fails but CPU passes, the game's CPU fallback handles it. If both fail, copy the error below and share it.</div>
+  </div>
+
+  <div class="step" id="s5">
+    <h2>5. Webcam access</h2>
+    <div class="status wait">checking…</div>
+    <div class="fix">Fix: click the camera icon in Chrome's address bar and set Camera to "Allow", then reload. Also close other apps using the camera (Zoom, Teams).</div>
+  </div>
+
+  <div id="verdict"></div>
+
+  <script type="module">
+    const $ = (id) => document.getElementById(id);
+    const results = {};
+
+    function mark(id, ok, detail = "") {
+      const step = $(id);
+      const status = step.querySelector(".status");
+      status.className = "status " + (ok ? "pass" : "fail");
+      status.textContent = ok ? "✅ PASS" : "❌ FAIL";
+      if (detail) {
+        const d = document.createElement("div");
+        d.className = "detail";
+        d.textContent = detail;
+        step.appendChild(d);
+      }
+      if (!ok) step.classList.add("failed");
+      results[id] = ok;
+    }
+
+    function verdict() {
+      const v = $("verdict");
+      v.style.display = "block";
+      const failed = Object.entries(results).filter(([, ok]) => !ok).map(([k]) => k);
+      if (failed.length === 0) {
+        v.style.borderColor = "#5eead4";
+        v.innerHTML = "✅ <b>All systems go.</b> The game should work here. If it still doesn't, try an Incognito window (Ctrl+Shift+N) — a browser extension may be interfering.";
+      } else {
+        v.style.borderColor = "#ff6b6b";
+        v.innerHTML = "❌ <b>Found the problem.</b> Follow the orange fix text in the failed step(s) above.";
+      }
+    }
+
+    // ---- Step 1: secure context ----
+    mark("s1", window.isSecureContext, `Page origin: ${location.origin}`);
+
+    // ---- Step 2: CDN reachable ----
+    let cdnOk = false;
+    try {
+      const r = await fetch("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/package.json", { cache: "no-store" });
+      cdnOk = r.ok;
+      mark("s2", r.ok, `HTTP ${r.status}`);
+    } catch (e) {
+      mark("s2", false, String(e));
+    }
+
+    // ---- Step 3: model downloadable ----
+    let modelOk = false;
+    try {
+      const r = await fetch("https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task", { cache: "no-store" });
+      const size = r.ok ? (await r.blob()).size : 0;
+      modelOk = r.ok && size > 100000;
+      mark("s3", modelOk, r.ok ? `Downloaded ${(size / 1024 / 1024).toFixed(1)} MB` : `HTTP ${r.status}`);
+    } catch (e) {
+      mark("s3", false, String(e));
+    }
+
+    // ---- Step 4: create the AI ----
+    if (cdnOk && modelOk) {
+      try {
+        const { HandLandmarker, FilesetResolver } = await import(
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14"
+        );
+        const vision = await FilesetResolver.forVisionTasks(
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+        );
+        const MODEL = "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
+        let mode = "GPU";
+        try {
+          await HandLandmarker.createFromOptions(vision, {
+            baseOptions: { modelAssetPath: MODEL, delegate: "GPU" },
+            runningMode: "VIDEO", numHands: 1,
+          });
+        } catch {
+          mode = "CPU";
+          await HandLandmarker.createFromOptions(vision, {
+            baseOptions: { modelAssetPath: MODEL, delegate: "CPU" },
+            runningMode: "VIDEO", numHands: 1,
+          });
+        }
+        mark("s4", true, `AI started using ${mode}`);
+      } catch (e) {
+        mark("s4", false, String(e && e.message ? e.message : e));
+      }
+    } else {
+      mark("s4", false, "Skipped — fix step 2/3 first");
+    }
+
+    // ---- Step 5: camera ----
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      stream.getTracks().forEach((t) => t.stop());
+      mark("s5", true);
+    } catch (e) {
+      mark("s5", false, String(e && e.name ? e.name + ": " + e.message : e));
+    }
+
+    verdict();
+  </script>
+</body>
+</html>

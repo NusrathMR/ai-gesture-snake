@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Space Snake — Mission Control</title>
+
+  <!-- Fonts: arcade display face + telemetry mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="console">
+
+    <!-- ====================== HEADER ====================== -->
+    <header class="console-header">
+      <div>
+        <p class="eyebrow">Mission Control · Gesture Link v1.0</p>
+        <h1 id="game-title">AI Space Snake</h1>
+        <p class="pilot">Pilot: <span id="player-name">Space Explorer</span></p>
+      </div>
+      <div class="status-pill" id="status-pill" data-state="boot">
+        <span class="status-dot"></span>
+        <span id="status-text">Booting systems…</span>
+      </div>
+    </header>
+
+    <!-- ====================== MAIN PANELS ====================== -->
+    <main class="panels">
+
+      <!-- ---------- GAME SCREEN ---------- -->
+      <section class="panel game-panel" aria-label="Game screen">
+        <div class="panel-label">Viewport · Sector 7</div>
+
+        <div class="screen-wrap">
+          <canvas id="game-canvas" width="525" height="525"></canvas>
+
+          <!-- Start screen -->
+          <div class="screen-overlay" id="start-screen">
+            <p class="overlay-eyebrow">Mission briefing</p>
+            <h2>Collect energy crystals.<br />Don't crash the ship.</h2>
+            <p class="overlay-copy">
+              Point your <strong>index finger</strong> at the camera and move it
+              up, down, left or right to steer. Arrow keys work too.
+            </p>
+            <button class="btn" id="start-btn">Launch mission</button>
+          </div>
+
+          <!-- Pause screen (manual pause + automatic "hand lost" pause) -->
+          <div class="screen-overlay hidden" id="pause-screen">
+            <p class="overlay-eyebrow">Systems holding</p>
+            <h2 id="pause-title">Mission paused</h2>
+            <p class="overlay-copy" id="pause-copy"></p>
+            <button class="btn" id="resume-btn">Resume</button>
+          </div>
+
+          <!-- Game over screen -->
+          <div class="screen-overlay hidden" id="end-screen">
+            <p class="overlay-eyebrow" id="end-eyebrow">Hull breach</p>
+            <h2 id="end-title">Ship lost</h2>
+            <p class="overlay-copy" id="end-copy">Final score: 0</p>
+            <button class="btn" id="restart-btn">Fly again</button>
+          </div>
+        </div>
+
+        <div class="screen-footer">
+          <button class="btn btn-quiet" id="pause-btn">Pause (P)</button>
+          <p class="hint">Keyboard backup: arrow keys or WASD</p>
+        </div>
+      </section>
+
+      <!-- ---------- HAND RADAR + TELEMETRY ---------- -->
+      <aside class="panel side-panel">
+
+        <div class="instrument">
+          <div class="panel-label">Hand radar</div>
+          <div class="radar-wrap">
+            <video id="webcam" autoplay playsinline muted></video>
+            <canvas id="radar-overlay"></canvas>
+          </div>
+          <p class="hint" id="radar-hint">Show one hand. Point with your index finger.</p>
+        </div>
+
+        <div class="instrument">
+          <div class="panel-label">Telemetry</div>
+          <dl class="telemetry">
+            <div class="readout">
+              <dt>Score</dt>
+              <dd id="score-readout" class="big-digits">0</dd>
+            </div>
+            <div class="readout">
+              <dt>Best</dt>
+              <dd id="best-readout" class="big-digits">0</dd>
+            </div>
+            <div class="readout">
+              <dt>Level</dt>
+              <dd id="level-readout">1</dd>
+            </div>
+            <div class="readout">
+              <dt>Target</dt>
+              <dd id="target-readout">100</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="instrument">
+          <div class="panel-label">Flight manual</div>
+          <ul class="manual">
+            <li><span class="key">☝ Up zone</span> steer up</li>
+            <li><span class="key">👇 Down zone</span> steer down</li>
+            <li><span class="key">👈 👉 Sides</span> steer left / right</li>
+            <li><span class="key">Center</span> keep current course</li>
+          </ul>
+        </div>
+
+      </aside>
+    </main>
+
+    <footer class="console-footer">
+      <p>
+        Built for the deployment workshop · Fork this repo, edit
+        <code>GAME_CONFIG</code> in <code>script.js</code>, then deploy to Vercel.
+      </p>
+    </footer>
+  </div>
+
+  <!-- Game logic + student customization area -->
+  <script type="module" src="script.js"></script>
+</body>
+</html>
