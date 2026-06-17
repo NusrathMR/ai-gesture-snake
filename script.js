@@ -13,8 +13,8 @@
 // ╚═══════════════════════════════════════════════════════════════════╝
 
 const GAME_CONFIG = {
-  playerName: "Space Explorer",   // 👈 put YOUR name here
-  gameTitle: "AI Space Snake",    // 👈 invent your own title
+  playerName: "Nusrath_MR",   // 👈 put YOUR name here
+  gameTitle: "Anagonda",    // 👈 invent your own title
 
   snakeSpeed: 220,        // milliseconds per move. BIGGER = SLOWER. Try 260 for easy mode, 140 for fast!
   pointsPerCrystal: 10,   // score for each crystal collected
